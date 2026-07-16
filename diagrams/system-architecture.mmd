@@ -3,8 +3,8 @@
 graph TB
     subgraph SENSORS["CAM BIEN - INPUT"]
         S1["Cảm biến độ ẩm đất<br/>(Capacitive)"]
-        S2["Cảm biến mực nước<br/>(Float Switch)"]
-        S3["DHT22<br/>Nhiệt độ & Độ ẩm KK"]
+        S2["Cảm biến mực nước<br/>(Analog)"]
+        S3["DHT22<br/>Nhiệt độ &amp; Độ ẩm KK"]
     end
 
     subgraph CONTROLS["NUT NHAN - INPUT"]
@@ -15,9 +15,9 @@ graph TB
 
     subgraph ESP32_CORE["ESP32 - BO DIEU KHIEN TRUNG TAM"]
         direction TB
-        FSM["FSM Controller<br/>Quản lý trạng thái"]
-        RTOS["FreeRTOS<br/>Đa nhiệm real-time"]
-        WIFI["Wi-Fi Module<br/>Kết nối Internet"]
+        FSM["FSM Controller<br/>7 trạng thái"]
+        RTOS["FreeRTOS<br/>5 Tasks dual-core"]
+        WIFI["Wi-Fi STA<br/>Kết nối Internet"]
     end
 
     subgraph ACTUATORS["THIET BI DIEU KHIEN - OUTPUT"]
@@ -26,14 +26,14 @@ graph TB
     end
 
     subgraph DISPLAY["HIEN THI - OUTPUT"]
-        LCD["LCD I2C 16x2<br/>Hoặc OLED"]
-        LED1["LED Xanh<br/>Bình thường"]
-        LED2["LED Vàng<br/>Đang tưới"]
-        LED3["LED Đỏ + Buzzer<br/>Lỗi/Cảnh báo"]
+        LCD["LCD I2C 16x2"]
+        LED1["LED Xanh - Bình thường"]
+        LED2["LED Vàng - Đang tưới"]
+        LED3["LED Đỏ + Buzzer - Lỗi"]
     end
 
-    subgraph IOT["IOT PLATFORM"]
-        WEB["Web App<br/>(ERa/Blynk)"]
+    subgraph IOT["IOT PLATFORM - BLYNK 2.0"]
+        WEB["Web Dashboard"]
         MOB["Mobile App<br/>(Android/iOS)"]
     end
 
@@ -42,22 +42,12 @@ graph TB
         TANK["Bồn nước"]
     end
 
-    S1 --> ESP32_CORE
-    S2 --> ESP32_CORE
-    S3 --> ESP32_CORE
-    B1 --> ESP32_CORE
-    B2 --> ESP32_CORE
-    B3 --> ESP32_CORE
+    S1 & S2 & S3 --> ESP32_CORE
+    B1 & B2 & B3 --> ESP32_CORE
 
-    ESP32_CORE --> R1
-    R1 --> P1
-    P1 --> TANK
-    TANK -->|"Tưới nước"| TREE
+    ESP32_CORE --> R1 --> P1 --> TANK -->|"Tưới"| TREE
 
-    ESP32_CORE --> LCD
-    ESP32_CORE --> LED1
-    ESP32_CORE --> LED2
-    ESP32_CORE --> LED3
+    ESP32_CORE --> LCD & LED1 & LED2 & LED3
 
     ESP32_CORE <-->|"Wi-Fi"| IOT
 

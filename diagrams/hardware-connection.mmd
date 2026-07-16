@@ -2,101 +2,91 @@
 
 graph TB
     subgraph ESP32["ESP32 DEVKIT V4"]
-        direction TB
-
         subgraph GPIO_IN["GPIO INPUT"]
             G34["GPIO 34<br/>(ADC1_CH6)"]
             G35["GPIO 35<br/>(ADC1_CH7)"]
+            G4["GPIO 4<br/>(DHT22)"]
             G32["GPIO 32<br/>(INPUT_PULLUP)"]
             G33["GPIO 33<br/>(INPUT_PULLUP)"]
             G26["GPIO 26<br/>(INPUT_PULLUP)"]
         end
 
         subgraph GPIO_OUT["GPIO OUTPUT"]
-            G12["GPIO 12<br/>( Relay IN )"]
-            G14["GPIO 14<br/>( LED Xanh )"]
-            G27["GPIO 27<br/>( LED Vàng )"]
-            G25["GPIO 25<br/>( LED Đỏ )"]
-            G23["GPIO 23<br/>( Buzzer )"]
+            G12["GPIO 12<br/>(Relay IN)"]
+            G14["GPIO 14<br/>(LED Xanh)"]
+            G27["GPIO 27<br/>(LED Vàng)"]
+            G25["GPIO 25<br/>(LED Đỏ)"]
+            G23["GPIO 23<br/>(Buzzer)"]
         end
 
         subgraph GPIO_I2C["GPIO I2C"]
-            G21["GPIO 21<br/>(SDA)"]
-            G22["GPIO 22<br/>(SCL)"]
+            G21["GPIO 21 (SDA)"]
+            G22["GPIO 22 (SCL)"]
         end
 
         subgraph POWER["NGUON"]
             V33["3V3"]
             V5["5V"]
-            GND1["GND"]
+            GND["GND"]
         end
     end
 
     subgraph SENSORS["CAM BIEN"]
         SOIL["Cảm biến độ ẩm đất<br/>(Capacitive v2.0)"]
-        WATER["Cảm biến mực nước<br/>(Float Switch)"]
+        WATER["Cảm biến mực nước<br/>(Analog)"]
         DHT["DHT22"]
     end
 
-    subgraph ACTUATORS["THIET BI"]
-        RELAY["Relay Module<br/>(1 kênh)"]
+    subgraph EXTERNAL["THIET BI NGOAI"]
+        RELAY["Relay Module (1 kênh)"]
         PUMP["Máy bơm nước mini<br/>(5V/12V)"]
-    end
-
-    subgraph DISPLAY_DEVICE["HIEN THI"]
         LCD["LCD I2C 16x2<br/>(addr: 0x27)"]
     end
 
     subgraph LEDS["LED & BUZZER"]
-        LED_GRN["LED Xanh<br/>(220Ω)"]
-        LED_YEL["LED Vàng<br/>(220Ω)"]
-        LED_RED["LED Đỏ<br/>(220Ω)"]
-        BUZ["Buzzer<br/>(Active)"]
+        LED_G["LED Xanh (220Ω)"]
+        LED_Y["LED Vàng (220Ω)"]
+        LED_R["LED Đỏ (220Ω)"]
+        BUZ["Buzzer (Active)"]
     end
 
     subgraph BUTTONS["NUT NHAN"]
-        BTN_AM["Nút Auto/Manual"]
-        BTN_WM["Nút tưới thủ công"]
-        BTN_RST["Nút Reset"]
+        BTN1["Nút Auto/Manual"]
+        BTN2["Nút tưới thủ công"]
+        BTN3["Nút Reset"]
     end
 
     subgraph PSU["NGUON CAP PHAT"]
-        PSU5V["Nguồn 5V<br/>(Adapter riêng)"]
-        PSU_GND["GND chung"]
+        ADAPTER["Nguồn 5V (Adapter)"]
     end
 
-    G34 -->|"Analog<br/>(0-3.3V)"| SOIL
-    G35 -->|"Digital<br/>(HIGH/LOW)"| WATER
+    G34 -->|"Analog (0-3.3V)"| SOIL
+    G35 -->|"Analog (ADC)"| WATER
+    G4 -->|"DATA"| DHT
     G21 -->|"SDA"| LCD
     G22 -->|"SCL"| LCD
 
     G12 -->|"IN"| RELAY
     RELAY -->|"NO/COM"| PUMP
 
-    G14 --> LED_GRN
-    G27 --> LED_YEL
-    G25 --> LED_RED
+    G14 --> LED_G
+    G27 --> LED_Y
+    G25 --> LED_R
     G23 --> BUZ
 
-    G32 --> BTN_AM
-    G33 --> BTN_WM
-    G26 --> BTN_RST
+    G32 --> BTN1
+    G33 --> BTN2
+    G26 --> BTN3
 
-    V5 --> LCD
     V33 --> SOIL
-    V33 --> WATER
-
-    PSU5V -->|"5V"| RELAY
-    PSU5V -->|"5V"| PUMP
-    PSU_GND --> GND1
-
-    SOIL -->|"AOUT → G34"| ESP32
-    DHT -->|"DATA → GPIO4"| ESP32
+    V5 --> LCD
+    ADAPTER -->|"5V"| RELAY
+    ADAPTER -->|"5V"| PUMP
+    ADAPTER -->|"GND"| GND
 
     style ESP32 fill:#2196F3,stroke:#1565C0,stroke-width:3px,color:#fff
     style SENSORS fill:#4CAF50,stroke:#2E7D32,color:#fff
-    style ACTUATORS fill:#F44336,stroke:#C62828,color:#fff
-    style DISPLAY_DEVICE fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style EXTERNAL fill:#F44336,stroke:#C62828,color:#fff
     style LEDS fill:#FF9800,stroke:#E65100,color:#fff
     style BUTTONS fill:#795548,stroke:#4E342E,color:#fff
     style PSU fill:#607D8B,stroke:#37474F,color:#fff

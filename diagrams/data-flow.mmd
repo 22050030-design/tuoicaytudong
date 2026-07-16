@@ -2,9 +2,8 @@
 
 graph LR
     subgraph INPUT["DAU VAO"]
-        direction TB
         S1["Cảm biến độ ẩm đất<br/>Analog → %"]
-        S2["Cảm biến mực nước<br/>Digital → ON/OFF"]
+        S2["Cảm biến mực nước<br/>Analog → ON/OFF"]
         S3["DHT22<br/>T(°C) + RH(%)"]
         B1["Nút Auto/Manual"]
         B2["Nút tưới thủ công"]
@@ -12,89 +11,73 @@ graph LR
     end
 
     subgraph ESP["ESP32 XU LY"]
-        direction TB
-
-        subgraph SENSOR_TASK["SensorTask (1s)"]
+        subgraph SENSOR_TASK["SensorTask (1s, Core 0)"]
             READ["Đọc cảm biến"]
-            FILTER["Lọc dữ liệu<br/>(Moving Average)"]
-            CONVERT["Chuyển đổi<br/>đơn vị"]
+            FILTER["Lọc Moving Average"]
+            CONVERT["Chuyển đổi đơn vị"]
         end
 
-        subgraph QUEUE_SYS["QUEUE & MUTEX"]
-            Q1["xQueueSend<br/>Dữ liệu cảm biến"]
-            MX1["xMutex<br/>Bảo vệ dữ liệu chung"]
+        subgraph QUEUE_SYS["QUEUE &amp; MUTEX"]
+            Q1["xQueueOverwrite<br/>(1 phần tử)"]
+            MX1["xMutex<br/>Bảo vệ state chung"]
             EG1["EventGroup<br/>WIFI, WATER, SENSOR flags"]
         end
 
-        subgraph CONTROL_TASK["ControlTask (100ms)"]
-            FSM["FSM Logic<br/>Xác định trạng thái"]
+        subgraph CONTROL_TASK["ControlTask (100ms, Core 1)"]
+            FSM["FSM Logic<br/>7 trạng thái"]
             DECIDE["Ra quyết định<br/>Bật/Tắt bơm"]
         end
 
-        subgraph SAFETY_TASK["SafetyTask (100ms)"]
-            CHECK_TIME["Kiểm tra timeout<br/>15 giây"]
-            CHECK_WATER["Kiểm tra nước<br/>Trong bồn"]
-            CHECK_SENSOR["Kiểm tra<br/>Cảm biến lỗi"]
+        subgraph SAFETY_TASK["SafetyTask (100ms, Core 1)"]
+            CHECK_TIME["Kiểm tra timeout 15s"]
+            CHECK_WATER["Kiểm tra nước"]
+            CHECK_SENSOR["Kiểm tra cảm biến"]
         end
 
-        subgraph DISPLAY_TASK["DisplayTask (500ms)"]
+        subgraph DISPLAY_TASK["DisplayTask (500ms, Core 0)"]
             LCD_UP["Cập nhật LCD"]
             LED_UP["Cập nhật LED"]
             BUZ_UP["Cập nhật Buzzer"]
         end
 
-        subgraph IOT_TASK["IoTTask (2s)"]
-            SEND["Gửi dữ liệu<br/>lên Cloud"]
-            RECV["Nhận lệnh<br/>từ Cloud"]
+        subgraph IOT_TASK["IoTTask (2s, Core 0)"]
+            SEND["Gửi dữ liệu<br/>Blynk V0-V5"]
+            RECV["Nhận lệnh<br/>Blynk V6"]
         end
     end
 
     subgraph OUTPUT["DAU RA"]
-        direction TB
         RELAY["Relay → Máy bơm"]
-        LCD["LCD/OLED Display"]
+        LCD["LCD Display"]
         LEDs["LED Status"]
         BUZZER["Buzzer"]
     end
 
-    subgraph CLOUD["IOT CLOUD"]
-        direction TB
-        PLATFORM["ERa / Blynk Platform"]
+    subgraph CLOUD["BLYNK 2.0"]
+        PLATFORM["Blynk Cloud"]
         WEB["Web Dashboard"]
         APP["Mobile App"]
     end
 
-    S1 --> READ
-    S2 --> READ
-    S3 --> READ
-    B1 --> DECIDE
-    B2 --> DECIDE
+    S1 & S2 & S3 --> READ
+    B1 & B2 --> DECIDE
     B3 --> FSM
 
-    READ --> FILTER --> CONVERT
-    CONVERT --> Q1
+    READ --> FILTER --> CONVERT --> Q1
     Q1 --> FSM
     MX1 --> FSM
     EG1 --> FSM
 
     FSM --> DECIDE
-    CHECK_TIME --> DECIDE
-    CHECK_WATER --> DECIDE
-    CHECK_SENSOR --> DECIDE
+    CHECK_TIME & CHECK_WATER & CHECK_SENSOR --> DECIDE
 
     DECIDE --> RELAY
-    DECIDE --> LCD_UP
-    DECIDE --> LED_UP
-    DECIDE --> BUZ_UP
-
+    DECIDE --> LCD_UP & LED_UP & BUZ_UP
     LCD_UP --> LCD
     LED_UP --> LEDs
     BUZ_UP --> BUZZER
 
-    CONVERT --> SEND
-    SEND --> PLATFORM
-    PLATFORM --> WEB
-    PLATFORM --> APP
+    CONVERT --> SEND --> PLATFORM --> WEB & APP
     RECV --> DECIDE
 
     style INPUT fill:#4CAF50,stroke:#2E7D32,color:#fff
