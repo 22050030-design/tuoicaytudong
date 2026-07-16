@@ -18,7 +18,7 @@ Nút điều khiển ──────┤
    FSM điều khiển  FreeRTOS     Wi-Fi/IoT
          │           │             │
          ▼           ▼             ▼
-   Relay/Máy bơm  LCD/LED      ERa/Blynk
+    Relay/Máy bơm  LCD/LED      Blynk
 ```
 
 ## Cấu trúc thư mục
@@ -113,9 +113,9 @@ INIT → MONITORING → AUTO_WATERING → COOLDOWN → MONITORING
 4. Thay `WIFI_SSID` / `WIFI_PASSWORD` trong `config.h`
 5. Upload và mở Serial Monitor 115200 baud
 
-## Tùy chọn IoT (ERa)
+## IoT Platform
 
-Mở `iot_manager.cpp` và bỏ comment các dòng ERa. Đăng ký tài khoản tại [https://era.sh](https://era.sh), tạo Template và thay `IOT_AUTH_TOKEN` trong `config.h`.
+Hệ thống sử dụng **Blynk 2.0** (`BlynkSimpleEsp32.h`). Cấu hình Template ID, Auth Token trong `config.h`. Xem README của thư viện Blynk để biết cách tạo Template trên App. Virtual Pin mapping: V0-V5 gửi sensor/state data, V6 nhận lệnh tưới thủ công từ App.
 
 ## Chế độ hoạt động
 
