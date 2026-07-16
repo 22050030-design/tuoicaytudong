@@ -1,0 +1,10 @@
+*.docx
+*.exe
+*.bin
+*.elf
+*.o
+*.d
+*.map
+.vscode/
+.idea/
+__pycache__/

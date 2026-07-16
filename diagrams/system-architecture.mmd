@@ -1,0 +1,70 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4CAF50', 'primaryTextColor': '#fff', 'primaryBorderColor': '#388E3C', 'lineColor': '#666', 'secondaryColor': '#2196F3', 'tertiaryColor': '#FF9800'}}}%%
+
+graph TB
+    subgraph SENSORS["CAM BIEN - INPUT"]
+        S1["Cảm biến độ ẩm đất<br/>(Capacitive)"]
+        S2["Cảm biến mực nước<br/>(Float Switch)"]
+        S3["DHT22<br/>Nhiệt độ & Độ ẩm KK"]
+    end
+
+    subgraph CONTROLS["NUT NHAN - INPUT"]
+        B1["Nút Auto/Manual"]
+        B2["Nút tưới thủ công"]
+        B3["Nút Reset"]
+    end
+
+    subgraph ESP32_CORE["ESP32 - BO DIEU KHIEN TRUNG TAM"]
+        direction TB
+        FSM["FSM Controller<br/>Quản lý trạng thái"]
+        RTOS["FreeRTOS<br/>Đa nhiệm real-time"]
+        WIFI["Wi-Fi Module<br/>Kết nối Internet"]
+    end
+
+    subgraph ACTUATORS["THIET BI DIEU KHIEN - OUTPUT"]
+        R1["Relay Module"]
+        P1["Máy bơm nước mini"]
+    end
+
+    subgraph DISPLAY["HIEN THI - OUTPUT"]
+        LCD["LCD I2C 16x2<br/>Hoặc OLED"]
+        LED1["LED Xanh<br/>Bình thường"]
+        LED2["LED Vàng<br/>Đang tưới"]
+        LED3["LED Đỏ + Buzzer<br/>Lỗi/Cảnh báo"]
+    end
+
+    subgraph IOT["IOT PLATFORM"]
+        WEB["Web App<br/>(ERa/Blynk)"]
+        MOB["Mobile App<br/>(Android/iOS)"]
+    end
+
+    subgraph PLANT["MUC TIEU"]
+        TREE["Cây trồng"]
+        TANK["Bồn nước"]
+    end
+
+    S1 --> ESP32_CORE
+    S2 --> ESP32_CORE
+    S3 --> ESP32_CORE
+    B1 --> ESP32_CORE
+    B2 --> ESP32_CORE
+    B3 --> ESP32_CORE
+
+    ESP32_CORE --> R1
+    R1 --> P1
+    P1 --> TANK
+    TANK -->|"Tưới nước"| TREE
+
+    ESP32_CORE --> LCD
+    ESP32_CORE --> LED1
+    ESP32_CORE --> LED2
+    ESP32_CORE --> LED3
+
+    ESP32_CORE <-->|"Wi-Fi"| IOT
+
+    style ESP32_CORE fill:#2196F3,stroke:#1565C0,stroke-width:3px,color:#fff
+    style SENSORS fill:#4CAF50,stroke:#2E7D32,stroke-width:2px,color:#fff
+    style CONTROLS fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#fff
+    style ACTUATORS fill:#F44336,stroke:#C62828,stroke-width:2px,color:#fff
+    style DISPLAY fill:#9C27B0,stroke:#6A1B9A,stroke-width:2px,color:#fff
+    style IOT fill:#00BCD4,stroke:#00838F,stroke-width:2px,color:#fff
+    style PLANT fill:#8BC34A,stroke:#558B2F,stroke-width:2px,color:#fff

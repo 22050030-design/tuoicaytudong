@@ -1,0 +1,109 @@
+%%{init: {'theme': 'base'}}%%
+
+graph LR
+    subgraph INPUT["DAU VAO"]
+        direction TB
+        S1["Cảm biến độ ẩm đất<br/>Analog → %"]
+        S2["Cảm biến mực nước<br/>Digital → ON/OFF"]
+        S3["DHT22<br/>T(°C) + RH(%)"]
+        B1["Nút Auto/Manual"]
+        B2["Nút tưới thủ công"]
+        B3["Nút Reset"]
+    end
+
+    subgraph ESP["ESP32 XU LY"]
+        direction TB
+
+        subgraph SENSOR_TASK["SensorTask (1s)"]
+            READ["Đọc cảm biến"]
+            FILTER["Lọc dữ liệu<br/>(Moving Average)"]
+            CONVERT["Chuyển đổi<br/>đơn vị"]
+        end
+
+        subgraph QUEUE_SYS["QUEUE & MUTEX"]
+            Q1["xQueueSend<br/>Dữ liệu cảm biến"]
+            MX1["xMutex<br/>Bảo vệ dữ liệu chung"]
+            EG1["EventGroup<br/>WIFI, WATER, SENSOR flags"]
+        end
+
+        subgraph CONTROL_TASK["ControlTask (100ms)"]
+            FSM["FSM Logic<br/>Xác định trạng thái"]
+            DECIDE["Ra quyết định<br/>Bật/Tắt bơm"]
+        end
+
+        subgraph SAFETY_TASK["SafetyTask (100ms)"]
+            CHECK_TIME["Kiểm tra timeout<br/>15 giây"]
+            CHECK_WATER["Kiểm tra nước<br/>Trong bồn"]
+            CHECK_SENSOR["Kiểm tra<br/>Cảm biến lỗi"]
+        end
+
+        subgraph DISPLAY_TASK["DisplayTask (500ms)"]
+            LCD_UP["Cập nhật LCD"]
+            LED_UP["Cập nhật LED"]
+            BUZ_UP["Cập nhật Buzzer"]
+        end
+
+        subgraph IOT_TASK["IoTTask (2s)"]
+            SEND["Gửi dữ liệu<br/>lên Cloud"]
+            RECV["Nhận lệnh<br/>từ Cloud"]
+        end
+    end
+
+    subgraph OUTPUT["DAU RA"]
+        direction TB
+        RELAY["Relay → Máy bơm"]
+        LCD["LCD/OLED Display"]
+        LEDs["LED Status"]
+        BUZZER["Buzzer"]
+    end
+
+    subgraph CLOUD["IOT CLOUD"]
+        direction TB
+        PLATFORM["ERa / Blynk Platform"]
+        WEB["Web Dashboard"]
+        APP["Mobile App"]
+    end
+
+    S1 --> READ
+    S2 --> READ
+    S3 --> READ
+    B1 --> DECIDE
+    B2 --> DECIDE
+    B3 --> FSM
+
+    READ --> FILTER --> CONVERT
+    CONVERT --> Q1
+    Q1 --> FSM
+    MX1 --> FSM
+    EG1 --> FSM
+
+    FSM --> DECIDE
+    CHECK_TIME --> DECIDE
+    CHECK_WATER --> DECIDE
+    CHECK_SENSOR --> DECIDE
+
+    DECIDE --> RELAY
+    DECIDE --> LCD_UP
+    DECIDE --> LED_UP
+    DECIDE --> BUZ_UP
+
+    LCD_UP --> LCD
+    LED_UP --> LEDs
+    BUZ_UP --> BUZZER
+
+    CONVERT --> SEND
+    SEND --> PLATFORM
+    PLATFORM --> WEB
+    PLATFORM --> APP
+    RECV --> DECIDE
+
+    style INPUT fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style ESP fill:#2196F3,stroke:#1565C0,color:#fff
+    style OUTPUT fill:#F44336,stroke:#C62828,color:#fff
+    style CLOUD fill:#00BCD4,stroke:#00838F,color:#fff
+    style SENSOR_TASK fill:#66BB6A,stroke:#388E3C,color:#fff
+    style CONTROL_TASK fill:#42A5F5,stroke:#1565C0,color:#fff
+    style SAFETY_TASK fill:#EF5350,stroke:#C62828,color:#fff
+    style DISPLAY_TASK fill:#AB47BC,stroke:#6A1B9A,color:#fff
+    style IOT_TASK fill:#26C6DA,stroke:#00838F,color:#fff
+    style QUEUE_SYS fill:#FFA726,stroke:#E65100,color:#fff

@@ -1,0 +1,89 @@
+%%{init: {'theme': 'base'}}%%
+
+graph TB
+    subgraph FREERTOS["FREERTOS KERNEL - ESP32"]
+        direction TB
+
+        subgraph TASKS["CAC TASK"]
+            direction LR
+
+            subgraph T1["SensorTask"]
+                T1_INFO["Chu kỳ: 1 giây<br/>Stack: 2048 bytes<br/>Priority: 2"]
+                T1_DO["- Đọc cảm biến đất<br/>- Đọc DHT22<br/>- Đọc mực nước<br/>- Gửi qua Queue"]
+            end
+
+            subgraph T2["ControlTask"]
+                T2_INFO["Chu kỳ: 100 ms<br/>Stack: 4096 bytes<br/>Priority: 3 (cao nhất)"]
+                T2_DO["- Xử lý FSM<br/>- Điều khiển Relay<br/>- Ghi đè Safety"]
+            end
+
+            subgraph T3["DisplayTask"]
+                T3_INFO["Chu kỳ: 500 ms<br/>Stack: 2048 bytes<br/>Priority: 1"]
+                T3_DO["- Cập nhật LCD<br/>- Điều khiển LED<br�>- Điều khiển Buzzer"]
+            end
+
+            subgraph T4["IoTTask"]
+                T4_INFO["Chu kỳ: 2 giây<br/>Stack: 8192 bytes<br/>Priority: 2"]
+                T4_DO["- Gửi dữ liệu lên Cloud<br/>- Nhận lệnh từ App<br/>- Quản lý Wi-Fi"]
+            end
+
+            subgraph T5["SafetyTask"]
+                T5_INFO["Chu kỳ: 100 ms<br/>Stack: 2048 bytes<br/>Priority: 4 (ưu tiên)"]
+                T5_DO["- Kiểm tra timeout bơm<br/>- Kiểm tra hết nước<br/>- Kiểm tra lỗi cảm biến<br/>- BẮT BUỘC tắt bơm"]
+            end
+        end
+
+        subgraph SYNC["CO SO SYNCHRONIZATION"]
+            direction LR
+
+            subgraph Q["Queue"]
+                Q_DESC["xQueue<br/>Truyền dữ liệu cảm biến<br/>từ SensorTask → ControlTask"]
+                Q_SIZE["Kích thước: 10 phần tử<br/>Kích thước mỗi phần tử: sizeof(SensorData)"]
+            end
+
+            subgraph MX["Mutex"]
+                MX_DESC["xMutex<br/>Bảo vệ dữ liệu chung"]
+                MX_PROTECT["- sensorData<br/>- pumpState<br/>- fsmState<br/>- alarmFlags"]
+            end
+
+            subgraph EG["Event Group"]
+                EG_DESC["xEventGroup<br/>Lưu các cờ trạng thái"]
+                EG_FLAGS["Bits:<br/>WIFI_CONNECTED<br/>IOT_CONNECTED<br/>WATER_EMPTY<br/>SENSOR_ERROR<br/>PUMP_RUNNING"]
+            end
+
+            subgraph SEM["Semaphore"]
+                SEM_DESC["xSemaphore<br/>Báo hiệu sự kiện"]
+                SEM_USE["- Button interrupt → ControlTask<br/>- Timer callback → SafetyTask"]
+            end
+        end
+
+        subgraph TIMER["SOFTWARE TIMER"]
+            direction LR
+            TM1["PumpTimer<br/>15 giây timeout<br/>Tự tắt bơm"]
+            TM2["CooldownTimer<br/>30 giây chờ<br/>Nước ngấm"]
+            TM3["WifiReconnectTimer<br/>5 giây thử lại<br/>Kết nối Wi-Fi"]
+        end
+    end
+
+    T1 -->|"QueueSend<br/>(SensorData)"| Q
+    Q -->|"QueueReceive<br/>(SensorData)"| T2
+    T2 -->|"MutexLock<br/>Update state"| MX
+    T3 -->|"MutexRead<br/>Get state"| MX
+    T4 -->|"EventGroup<br/>Check WIFI"| EG
+    T5 -->|"EventGroup<br/>Set WATER_EMPTY"| EG
+    T5 -->|"SemaphoreGive<br/>ALARM event"| SEM
+    SEM -->|"SemaphoreTake<br/>Handle ALARM"| T2
+
+    style FREERTOS fill:#1a237e,stroke:#0D47A1,stroke-width:3px,color:#fff
+    style TASKS fill:#1565C0,stroke:#0D47A1,color:#fff
+    style T1 fill:#43A047,stroke:#2E7D32,color:#fff
+    style T2 fill:#1E88E5,stroke:#1565C0,color:#fff
+    style T3 fill:#8E24AA,stroke:#6A1B9A,color:#fff
+    style T4 fill:#00ACC1,stroke:#00838F,color:#fff
+    style T5 fill:#E53935,stroke:#C62828,color:#fff
+    style SYNC fill:#F57C00,stroke:#E65100,color:#fff
+    style Q fill:#FFB300,stroke:#FF8F00,color:#000
+    style MX fill:#FF8F00,stroke:#E65100,color:#fff
+    style EG fill:#FB8C00,stroke:#EF6C00,color:#fff
+    style SEM fill:#FFA000,stroke:#FF6F00,color:#000
+    style TIMER fill:#5C6BC0,stroke:#3949AB,color:#fff

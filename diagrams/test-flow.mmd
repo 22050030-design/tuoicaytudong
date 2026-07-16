@@ -1,0 +1,132 @@
+%%{init: {'theme': 'base'}}%%
+
+graph TB
+    START["🧪 BẮT ĐẦU KIỂM THỬ"] --> TC01
+
+    subgraph TC01["TC01 - KHOI DONG"]
+        T01A["Cấp nguồn ESP32"] --> T01B["Kiểm tra LCD hiển thị"]
+        T01B --> T01C["Kiểm tra LED xanh sáng"]
+        T01C --> T01D{"Khởi tạo OK?"}
+        T01D -->|"Pass ✅"| TC02
+        T01D -->|"Fail ❌"| FAIL01["Ghi nhận lỗi:<br/>Khởi tạo thất bại"]
+    end
+
+    subgraph TC02["TC02 - DAT KHO"]
+        T02A["Điều chỉnh cảm biến<br/>dưới 35%"] --> T02B["Quan sát Relay"]
+        T02B --> T02C{"Bơm tự bật?"}
+        T02C -->|"Pass ✅"| TC03
+        T02C -->|"Fail ❌"| FAIL02["Ghi nhận lỗi:<br/>Bơm không tự bật"]
+    end
+
+    subgraph TC03["TC03 - DAT DU AM"]
+        T03A["Tăng độ ẩm<br/>trên 60%"] --> T03B["Quan sát Relay"]
+        T03B --> T03C{"Bơm tự tắt?"}
+        T03C -->|"Pass ✅"| TC04
+        T03C -->|"Fail ❌"| FAIL03["Ghi nhận lỗi:<br/>Bơm không tự tắt"]
+    end
+
+    subgraph TC04["TC04 - HET NUOC"]
+        T04A["Kích hoạt cảm biến<br/>hết nước"] --> T04B["Quan sát LED đỏ<br/>và Buzzer"]
+        T04B --> T04C{"Bơm KHÔNG chạy?<br/>LED đỏ + Buzzer ON?"}
+        T04C -->|"Pass ✅"| TC05
+        T04C -->|"Fail ❌"| FAIL04["Ghi nhận lỗi:<br/>Bơm vẫn chạy khi hết nước"]
+    end
+
+    subgraph TC05["TC05 - TUOI THU CONG"]
+        T05A["Nhấn nút tưới<br/>trên mô hình"] --> T05B["Quan sát Relay"]
+        T05B --> T05C{"Bơm hoạt động?<br/>Trong giới hạn an toàn?"}
+        T05C -->|"Pass ✅"| TC06
+        T05C -->|"Fail ❌"| FAIL05["Ghi nhận lỗi:<br/>Tưới thủ công không hoạt động"]
+    end
+
+    subgraph TC06["TC06 - DIEU KHIEN IOT"]
+        T06A["Nhấn nút tưới<br/>trên App"] --> T06B["Quan sát Relay<br/>trên mô hình"]
+        T06B --> T06C{"Bơm phản hồi<br/>chính xác?"}
+        T06C -->|"Pass ✅"| TC07
+        T06C -->|"Fail ❌"| FAIL06["Ghi nhận lỗi:<br/>IoT không điều khiển được"]
+    end
+
+    subgraph TC07["TC07 - BOM QUA THOI GIAN"]
+        T07A["Để đất luôn khô<br/>(dưới 35%)"] --> T07B["Để bơm chạy<br/>qua 15 giây"]
+        T07B --> T07C{"Bơm tự tắt<br/>sau 15 giây?"}
+        T07C -->|"Pass ✅"| TC08
+        T07C -->|"Fail ❌"| FAIL07["Ghi nhận lỗi:<br/>Bơm không tự tắt"]
+    end
+
+    subgraph TC08["TC08 - MAT WI-FI"]
+        T08A["Tắt Router<br/>hoặc ngắt mạng"] --> T08B["Đợi 5 giây"]
+        T08B --> T08C{"Chế độ tự động<br/>vẫn hoạt động?"}
+        T08C -->|"Pass ✅"| TC09
+        T08C -->|"Fail ❌"| FAIL08["Ghi nhận lỗi:<br/>Mất Wi-Fi → hệ thống dừng"]
+    end
+
+    subgraph TC09["TC09 - KHOI PHUC WI-FI"]
+        T09A["Bật lại Router"] --> T09B["Đợi ESP32<br/>tự kết nối lại"]
+        T09B --> T09C{"ESP32 kết nối<br/>IoT Platform lại?"}
+        T09C -->|"Pass ✅"| TC10
+        T09C -->|"Fail ❌"| FAIL09["Ghi nhận lỗi:<br/>Không tự kết nối lại"]
+    end
+
+    subgraph TC10["TC10 - LOI CAM BIEN"]
+        T10A["Rút dây cảm biến<br/>độ ẩm đất"] --> T10B["Quan sát hệ thống"]
+        T10B --> T10C{"Bơm dừng?<br/>Báo lỗi?"}
+        T10C -->|"Pass ✅"| TC11
+        T10C -->|"Fail ❌"| FAIL10["Ghi nhận lỗi:<br/>Không phát hiện lỗi cảm biến"]
+    end
+
+    subgraph TC11["TC11 - RESET CANH BAO"]
+        T11A["Bổ sung nước<br/>Gắn lại cảm biến"] --> T11B["Nhấn Reset"]
+        T11B --> T11C{"Buzzer tắt?<br/>Hệ thống giám sát lại?"}
+        T11C -->|"Pass ✅"| TC12
+        T11C -->|"Fail ❌"| FAIL11["Ghi nhận lỗi:<br/>Reset không hoạt động"]
+    end
+
+    subgraph TC12["TC12 - DA NHIEM"]
+        T12A["Tưới tự động<br/>đồng thời<br/>cập nhật IoT"] --> T12B["Kiểm tra LCD<br/>và App"]
+        T12B --> T12C{"LCD và ứng dụng<br/>vẫn phản hồi?"}
+        T12C -->|"Pass ✅"| PASS["🎉 TẤT CẢ<br/>ĐẠT ✅"]
+        T12C -->|"Fail ❌"| FAIL12["Ghi nhận lỗi:<br/>Đa nhiệm lỗi"]
+    end
+
+    PASS --> END["🏁 KẾT THÚC<br/>LƯU BÁO CÁO"]
+
+    FAIL01 --> END
+    FAIL02 --> END
+    FAIL03 --> END
+    FAIL04 --> END
+    FAIL05 --> END
+    FAIL06 --> END
+    FAIL07 --> END
+    FAIL08 --> END
+    FAIL09 --> END
+    FAIL10 --> END
+    FAIL11 --> END
+    FAIL12 --> END
+
+    style START fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style PASS fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style END fill:#607D8B,stroke:#37474F,color:#fff
+    style TC01 fill:#E3F2FD,stroke:#1565C0
+    style TC02 fill:#E8F5E9,stroke:#2E7D32
+    style TC03 fill:#E8F5E9,stroke:#2E7D32
+    style TC04 fill:#FFF3E0,stroke:#E65100
+    style TC05 fill:#F3E5F5,stroke:#6A1B9A
+    style TC06 fill:#F3E5F5,stroke:#6A1B9A
+    style TC07 fill:#FFEBEE,stroke:#C62828
+    style TC08 fill:#E0F7FA,stroke:#00838F
+    style TC09 fill:#E0F7FA,stroke:#00838F
+    style TC10 fill:#FFEBEE,stroke:#C62828
+    style TC11 fill:#FFF8E1,stroke:#F57F17
+    style TC12 fill:#EDE7F6,stroke:#4527A0
+    style FAIL01 fill:#F44336,stroke:#C62828,color:#fff
+    style FAIL02 fill:#F44336,stroke:#C62828,color:#fff
+    style FAIL03 fill:#F44336,stroke:#C62828,color:#fff
+    style FAIL04 fill:#F44336,stroke:#C62828,color:#fff
+    style FAIL05 fill:#F44336,stroke:#C62828,color:#fff
+    style FAIL06 fill:#F44336,stroke:#C62828,color:#fff
+    style FAIL07 fill:#F44336,stroke:#C62828,color:#fff
+    style FAIL08 fill:#F44336,stroke:#C62828,color:#fff
+    style FAIL09 fill:#F44336,stroke:#C62828,color:#fff
+    style FAIL10 fill:#F44336,stroke:#C62828,color:#fff
+    style FAIL11 fill:#F44336,stroke:#C62828,color:#fff
+    style FAIL12 fill:#F44336,stroke:#C62828,color:#fff

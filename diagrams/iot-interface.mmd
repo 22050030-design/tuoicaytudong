@@ -1,0 +1,80 @@
+%%{init: {'theme': 'base'}}%%
+
+graph TB
+    subgraph DASHBOARD["GIAO DIEN IOT - ERa / Blynk"]
+        direction TB
+
+        subgraph ROW1["HANG 1 - BIEU DO & DONG HO"]
+            GAUGE1["📊 Đồng hồ độ ẩm đất<br/>0% ──── 100%<br/>Ngưỡng: 35% (đỏ) - 60% (xanh)"]
+            GAUGE2["🌡️ Đồng hồ nhiệt độ<br/>-10°C ── 50°C"]
+            GAUGE3["💧 Đồng hồ độ ẩm KK<br/>0% ──── 100%"]
+        end
+
+        subgraph ROW2["HANG 2 - TRANG THAI"]
+            ST_WATER["🚰 Trạng thái mực nước<br/>ON = Còn nước<br/>OFF = Hết nước"]
+            ST_PUMP["⚙️ Trạng thái máy bơm<br/>ON = Đang chạy<br/>OFF = Tắt"]
+            ST_MODE["🔄 Chế độ<br/>AUTO / MANUAL"]
+            ST_WIFI["📶 Wi-Fi<br/>Connected / Offline"]
+        end
+
+        subgraph ROW3["HANG 3 - DIEU KHIEN"]
+            BTN_MANUAL["🔘 Nút BẬT/TẮT<br/>Tưới thủ công"]
+            SLIDER_LOW["🎚️ Đặt ngưỡng đất khô<br/>(Default: 35%)"]
+            SLIDER_HIGH["🎚️ Đặt ngưỡng dừng tưới<br/>(Default: 60%)"]
+            SLIDER_TIMEOUT["⏱️ Thời gian tưới tối đa<br/>(Default: 15 giây)"]
+        end
+
+        subgraph ROW4["HANG 4 - LICH SU"]
+            CHART["📈 Biểu đồ độ ẩm<br/>theo thời gian<br/>(24h / 7 ngày)"]
+            HISTORY["📋 Lịch sử tưới<br/>Thời gian bắt đầu<br/>Thời gian kết thúc<br/>Lý do dừng"]
+        end
+
+        subgraph ROW5["HANG 5 - CANH BAO"]
+            NOTI_WARN["⚠️ Cảnh báo hết nước"]
+            NOTI_ERR["❌ Lỗi cảm biến"]
+            NOTI_PUMP["🔧 Bơm quá thời gian"]
+            NOTI_WIFI["📡 Mất kết nối"]
+        end
+
+        subgraph SCHEDULE["HANG 6 - LICH TUOI"]
+            TIME1["⏰ Lịch tưới 1<br/>06:00 AM"]
+            TIME2["⏰ Lịch tưới 2<br/>17:00 PM"]
+            TOGGLE1["🔘 Bật/Tắt lịch 1"]
+            TOGGLE2["🔘 Bật/Tắt lịch 2"]
+        end
+    end
+
+    subgraph DEVICE["ESP32 - THIET BI"]
+        direction TB
+        WIFI_MOD["Wi-Fi Module<br/>STA Mode"]
+        MQTT["MQTT Protocol<br/>(hoặc HTTP)"]
+    end
+
+    subgraph CLOUD_SVC["CLOUD SERVICE"]
+        direction TB
+        ERa["ERa Platform<br/>Hoặc Blynk Cloud"]
+        SERVER["Server<br/>(Asia/Europe)"]
+    end
+
+    WIFI_MOD <-->|"TCP/IP"| SERVER
+    SERVER <-->|"MQTT/HTTP"| ERa
+    MQTT --> SERVER
+
+    DASHBOARD <-->|"WebSocket"| ERa
+
+    style DASHBOARD fill:#E3F2FD,stroke:#1565C0,stroke-width:2px
+    style ROW1 fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style ROW2 fill:#2196F3,stroke:#1565C0,color:#fff
+    style ROW3 fill:#FF9800,stroke:#E65100,color:#fff
+    style ROW4 fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style ROW5 fill:#F44336,stroke:#C62828,color:#fff
+    style SCHEDULE fill:#00BCD4,stroke:#00838F,color:#fff
+    style DEVICE fill:#1565C0,stroke:#0D47A1,color:#fff
+    style CLOUD_SVC fill:#00ACC1,stroke:#00838F,color:#fff
+    style GAUGE1 fill:#66BB6A,stroke:#388E3C,color:#fff
+    style GAUGE2 fill:#EF5350,stroke:#C62828,color:#fff
+    style GAUGE3 fill:#42A5F5,stroke:#1565C0,color:#fff
+    style BTN_MANUAL fill:#FF7043,stroke:#D84315,color:#fff
+    style SLIDER_LOW fill:#FFA726,stroke:#E65100,color:#fff
+    style SLIDER_HIGH fill:#FFA726,stroke:#E65100,color:#fff
+    style SLIDER_TIMEOUT fill:#FFA726,stroke:#E65100,color:#fff

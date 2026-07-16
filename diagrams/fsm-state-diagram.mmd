@@ -1,0 +1,103 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#2196F3', 'primaryTextColor': '#fff'}}}%%
+
+stateDiagram-v2
+    [*] --> INIT
+
+    INIT --> MONITORING : Khởi tạo thành công<br/>(Cảm biến, LCD, Wi-Fi, IoT OK)
+
+    state MONITORING {
+        [*] --> DocCamBien
+        DocCamBien --> KiemTraDieuKien
+        KiemTraDieuKien --> DocCamBien
+    }
+
+    MONITORING --> AUTO_WATERING : Đất khô (doMuc < 35%)<br/>VÀ bồn còn nước
+
+    MONITORING --> MANUAL_WATERING : Nhận lệnh tưới<br/>(Nút nhấn hoặc IoT)
+
+    MONITORING --> OFFLINE : Mất kết nối Internet
+
+    MONITORING --> ALARM : Cảm biến lỗi<br/>Hoặc bồn hết nước<br/>Phát hiện khi giám sát
+
+    state AUTO_WATERING {
+        [*] --> BatBom
+        BatBom --> DangTuoi : Relay ON
+        DangTuoi --> KiemTraAnToan
+        KiemTraAnToan --> DangTuoi : An toàn
+        KiemTraAnToan --> TatBom : Đủ ẩm hoặc Timeout
+    }
+
+    AUTO_WATERING --> COOLDOWN : Đất đủ ẩm (doMuc >= 60%)<br/>Hoặc hết 15 giây
+
+    AUTO_WATERING --> ALARM : Hết nước<br/>Hoặc bơm quá 15 giây<br/>Hoặc cảm biến lỗi
+
+    state MANUAL_WATERING {
+        [*] --> BatBomThuCong
+        BatBomThuCong --> DangTuoiThuCong : Relay ON
+        DangTuoiThuCong --> KiemTraAnToanTC
+        KiemTraAnToanTC --> DangTuoiThuCong : An toàn
+        KiemTraAnToanTC --> TatBomTC : Đủ ẩm hoặc Timeout
+    }
+
+    MANUAL_WATERING --> MONITORING : Nhấn nút ngừng tưới<br/>Hoặc hết 15 giây
+
+    MANUAL_WATERING --> ALARM : Hết nước<br/>Hoặc bơm quá 15 giây
+
+    state COOLDOWN {
+        [*] --> ChoNuocNgam
+        ChoNuocNgam --> DoLaiDoAm : 30 giây
+    }
+
+    COOLDOWN --> MONITORING : Hết 30 giây chờ
+
+    state ALARM {
+        [*] --> BaoLoi
+        BaoLoi --> ChoXuLy : LED đỏ + Buzzer ON
+    }
+
+    ALARM --> MONITORING : Xử lý lỗi + Nhấn Reset<br/>(Bổ sung nước / Thay cảm biến)
+
+    MONITORING --> OFFLINE : Mất Internet
+
+    state OFFLINE {
+        [*] --> HoatDongTaiCho
+        HoatDongTaiCho --> TuoiTuDongLocal : Vẫn đọc cảm biến<br/>Và điều khiển bơm
+    }
+
+    OFFLINE --> MONITORING : Internet khôi phục<br/>Tự kết nối lại
+
+    note right of INIT
+        Khởi tạo:
+        - Cảm biến
+        - LCD/OLED
+        - Wi-Fi
+        - IoT Platform
+    end note
+
+    note left of MONITORING
+        Trạng thái chính:
+        - Đọc cảm biến mỗi 1 giây
+        - Kiểm tra điều kiện tưới
+        - Gửi dữ liệu IoT
+    end note
+
+    note right of AUTO_WATERING
+        Tưới tự động:
+        - Relay ON
+        - Timeout 15 giây
+        - LED vàng sáng
+    end note
+
+    note left of ALARM
+        Cảnh báo:
+        - LED đỏ nhấp nháy
+        - Buzzer kêu
+        - Bơm TẮT ngay
+    end note
+
+    note right of OFFLINE
+        Mất Internet:
+        - Vẫn tưới tự động
+        - Không gửi IoT
+        - LED xanh nhấp nháy
+    end note
